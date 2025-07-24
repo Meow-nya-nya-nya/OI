@@ -4,12 +4,13 @@ import asyncio
 import sys
 import random
 import time
+import os
 import signal
 from collections import deque
 
 
-# ASCII RPG 游戏类
-class ASCIIRPG:
+# 主游戏
+class OI:
     def __init__(self, conn):
         self.conn = conn
         self.width = 80
@@ -127,7 +128,7 @@ class ASCIIRPG:
             output += f"> {msg}\n"
 
         # 绘制控制说明
-        controls = "Controls: ← → to move, SPACE to jump, Q to quit, R to restart"
+        controls = "Controls: A/← = left, D/→ = right, SPACE = jump, Q = quit, R = restart"
         output += "\n" + controls + "\n"
 
         # 绘制游戏结束画面
@@ -138,6 +139,11 @@ class ASCIIRPG:
         self.conn.write(output)
 
     def process_input(self, data):
+        # 处理输入数据
+        if data == '\x1b':  # ESC序列开始
+            # 读取接下来的2个字符
+            data += self.conn.read(2, timeout=0.01)
+
         data = data.lower()
         self.last_input = data
 
@@ -146,7 +152,7 @@ class ASCIIRPG:
             return False
 
         if 'r' in data and (self.game_over or 'r' in self.last_input):
-            self.__init__(self.conn)
+            self.reset()
             return True
 
         if self.game_over:
@@ -255,6 +261,11 @@ class ASCIIRPG:
                     break
             except asyncio.TimeoutError:
                 pass
+            except (asyncssh.ConnectionLost, asyncssh.TerminalSizeChanged, ConnectionResetError):
+                break
+            except Exception as e:
+                print(f"Input error: {e}")
+                break
 
             # 更新游戏状态
             self.update()
@@ -265,20 +276,29 @@ class ASCIIRPG:
             # 控制游戏速度
             await asyncio.sleep(0.05)
 
+    def reset(self):
+        """重启游戏，但保留 conn 等不变"""
+        self.__init__(self.conn)
 
-# SSH 这一块
-class SSHGameServer(asyncssh.SSHServer):
+
+# SSH 服务器处理类
+class SSHGameServer(asyncssh.SSHServer, asyncssh.SSHServerSession):
     def __init__(self):
+        super().__init__()
         self.username = None
+        self._chan = None
 
+    # ---------- 以下 4 个方法是 SSHServer 协议 ----------
     def connection_made(self, conn):
         self.conn = conn
-        print(f"New connection from {conn.get_extra_info('peername')[0]}")
+        try:
+            peer = conn.get_extra_info('peername')
+            print(f"New connection from {peer[0]}")
+        except Exception as e:
+            print(f"Connection made error: {e}")
 
     def connection_lost(self, exc):
-        if exc:
-            print(f"Connection lost: {exc}")
-        print("Client disconnected")
+        print("Client disconnected" if exc is None else f"Connection lost: {exc}")
 
     def begin_auth(self, username):
         self.username = username
@@ -288,7 +308,6 @@ class SSHGameServer(asyncssh.SSHServer):
         return True
 
     def validate_password(self, username, password):
-        # 密码的
         if password == "ciallo":
             print(f"User {username} authenticated successfully")
             return True
@@ -296,60 +315,122 @@ class SSHGameServer(asyncssh.SSHServer):
         return False
 
     def session_requested(self):
+        # 关键：返回自己（SSHServerSession 实例），而不是 bool
+        return self
+
+    # ---------- 以下 3 个方法是 SSHServerSession 协议 ----------
+    def session_started(self):
+        # 会话真正开始时启动游戏
+        pass
+
+    async def _run_game(self):
+        try:
+            game = OI(self._chan)
+            await game.run()
+        except Exception as e:
+            print(f"Game session error: {e}")
+        finally:
+            if self._chan is not None:
+                try:
+                    self._chan.exit(0)
+                except asyncssh.ConnectionLost:
+                    pass
+
+    # 让 SSHServerSession 的 process 回调指向我们
+    def shell_requested(self):
         return True
 
-    async def start_session(self, process):
-        game = ASCIIRPG(process)
-        await game.run()
-        process.exit(0)
+    def exec_requested(self, command):
+        return False     # 不允许执行命令，只提供交互式 shell
+
+    def pty_requested(self, term_type, term_size, term_modes):
+        return True      # 允许分配伪终端
+
+    def subsystem_requested(self, subsystem):
+        return False
+
+    # asyncssh 在会话建立后会调用此函数，把 channel 传进来
+    def connection_made_chan(self, chan):
+        self._chan = chan
+        asyncio.create_task(self._run_game())
 
 
-# 跑起来主服务器
+# 生成SSH主机密钥
+def generate_ssh_key():
+    key_path = 'ssh_host_key'
+    if not os.path.exists(key_path):
+        print("Generating SSH host key...")
+        # 生成RSA密钥（2048位）
+        key = asyncssh.generate_private_key('ssh-rsa', key_size=2048)
+        key.write_private_key(key_path)
+        print(f"SSH host key generated and saved to {key_path}")
+    else:
+        print(f"Using existing SSH host key at {key_path}")
+
+
+# 主服务器函数
 async def run_server():
     host = '0.0.0.0'
-    port = 22
+    port = 2222
 
     print(f"Starting SSH game server on {host}:{port}")
-    print("Connect with: ssh -p 22 player@localhost")
-    print("Password: ciallo")
+    print("Connect with: ssh -p 2222 player@localhost")
+    print("Password: ciallo")  # 使用您设置的密码
 
-    await asyncssh.create_server(
-        SSHGameServer,
-        host,
-        port,
-        server_host_keys=['ssh_host_key'],
-        process_factory=None
-    )
-
-
-# 密钥
-async def generate_ssh_key():
-    key = await asyncssh.generate_private_key('ssh-rsa')
-    key.write_private_key('ssh_host_key')
-    return key
+    try:
+        await asyncssh.create_server(
+            lambda: SSHGameServer(),
+            host,
+            port,
+            server_host_keys=['ssh_host_key'],
+            process_factory=None
+        )
+    except Exception as e:
+        print(f"Server creation error: {e}")
+        raise
 
 
-# 面
+# 主函数
 def main():
-    loop = asyncio.get_event_loop()
+    # 生成SSH主机密钥（如果不存在）
+    generate_ssh_key()
 
+    # 设置信号处理
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
 
+    # 创建服务器任务
+    server_task = None
+
+    async def start_server():
+        nonlocal server_task
+        server_task = asyncio.create_task(run_server())
+        await asyncio.sleep(0)  # 确保任务被调度
+
+    # 启动服务器
     try:
-        open('ssh_host_key', 'r').close()
-    except FileNotFoundError:
-        print("Generating SSH host key...")
-        loop.run_until_complete(generate_ssh_key())
-
-    # 启动！
-    try:
-        loop.run_until_complete(run_server())
+        print("Starting server...")
+        loop.run_until_complete(start_server())
+        print("Server started. Press Ctrl+C to stop.")
         loop.run_forever()
-    except (OSError, asyncssh.Error) as exc:
-        sys.exit(f"Error starting server: {exc}")
     except KeyboardInterrupt:
         print("\nServer shutting down...")
+    except Exception as e:
+        print(f"Server error: {e}")
     finally:
+        # 关闭服务器
+        if server_task and not server_task.done():
+            server_task.cancel()
+
+        # 取消所有任务
+        tasks = asyncio.all_tasks(loop)
+        for task in tasks:
+            task.cancel()
+
+        # 等待所有任务完成
+        loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
         loop.close()
+        print("Server stopped.")
 
 
 if __name__ == "__main__":
