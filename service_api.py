@@ -1,4 +1,6 @@
 # service_api.py
+import logging_config  # 必须放最前
+logging_config.setup_logging()
 from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import Dict, List
