@@ -84,16 +84,16 @@ class OI:
 
         # 定位光标并绘制
         self.chan.write(f"\x1b[{center_y}H")  # 移动到垂直中心
-            for line in lines:
+        for line in lines:
             self.chan.write(f"\x1b[{center_x}G")  # 移动到水平位置
             self.chan.write(line + "\r\n")
 
         # 显示提示信息
         prompt = "Press 'q' to exit"
         prompt_x = max(0, (self.terminal_width - len(prompt)) // 2)
-            self.chan.write(f"\x1b[{center_y + len(lines) + 2}H")  # 移动到提示行
-            self.chan.write(f"\x1b[{prompt_x}G")  # 移动到水平位置
-            self.chan.write(f"\x1b[1;33m{prompt}\x1b[0m")  # 黄色加粗文本
+        self.chan.write(f"\x1b[{center_y + len(lines) + 2}H")  # 移动到提示行
+        self.chan.write(f"\x1b[{prompt_x}G")  # 移动到水平位置
+        self.chan.write(f"\x1b[1;33m{prompt}\x1b[0m")  # 黄色加粗文本
 
     async def update_display(self):
         """更新屏幕显示"""
