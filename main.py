@@ -33,8 +33,8 @@ class OI:
 
     async def initialize_terminal(self):
         """初始化终端设置"""
-        await self.chan.write("\x1b[?25l")  # 隐藏光标
-        await self.chan.write("\x1b[?1049h")  # 进入备用屏幕缓冲区
+        self.chan.write("\x1b[?25l")  # 隐藏光标
+        self.chan.write("\x1b[?1049h")  # 进入备用屏幕缓冲区
         await self.clear_screen()
         await self.draw_ascii_art()
 
@@ -63,7 +63,7 @@ class OI:
 
     async def clear_screen(self):
         """清屏并重置光标位置"""
-        await self.chan.write("\x1b[2J\x1b[H")
+        self.chan.write("\x1b[2J\x1b[H")
 
     async def draw_ascii_art(self):
         """绘制 Ciallo 的 ASCII 艺术字"""
@@ -83,17 +83,17 @@ class OI:
         center_y = max(0, (self.terminal_height - len(lines)) // 2)
 
         # 定位光标并绘制
-        await self.chan.write(f"\x1b[{center_y}H")  # 移动到垂直中心
-        for line in lines:
-            await self.chan.write(f"\x1b[{center_x}G")  # 移动到水平位置
-            await self.chan.write(line + "\r\n")
+        self.chan.write(f"\x1b[{center_y}H")  # 移动到垂直中心
+            for line in lines:
+            self.chan.write(f"\x1b[{center_x}G")  # 移动到水平位置
+            self.chan.write(line + "\r\n")
 
         # 显示提示信息
         prompt = "Press 'q' to exit"
         prompt_x = max(0, (self.terminal_width - len(prompt)) // 2)
-        await self.chan.write(f"\x1b[{center_y + len(lines) + 2}H")  # 移动到提示行
-        await self.chan.write(f"\x1b[{prompt_x}G")  # 移动到水平位置
-        await self.chan.write(f"\x1b[1;33m{prompt}\x1b[0m")  # 黄色加粗文本
+            self.chan.write(f"\x1b[{center_y + len(lines) + 2}H")  # 移动到提示行
+            self.chan.write(f"\x1b[{prompt_x}G")  # 移动到水平位置
+            self.chan.write(f"\x1b[1;33m{prompt}\x1b[0m")  # 黄色加粗文本
 
     async def update_display(self):
         """更新屏幕显示"""
@@ -145,9 +145,11 @@ class SSHGameSession(asyncssh.SSHServerSession):
             print(f"Terminal size: {term_size[0]}x{term_size[1]}")
         return True
 
-    def session_started(self, chan):
-        self.chan = chan
+    def session_started(self):
         asyncio.create_task(self._run_game())
+
+    def connection_made(self, chan):
+        self.chan = chan
 
     async def _run_game(self):
         try:
