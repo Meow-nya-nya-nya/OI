@@ -72,56 +72,37 @@ Tip: Type 'clear' to clear the screen
     def process_command(self, command: str, game_state: Dict[str, Any]) -> str:
         """处理玩家命令"""
         command = command.strip().lower()
-        
+
         if not command:
             return "请输入一个命令。"
-        
-        # 解析命令
+
         parts = command.split()
         action = parts[0]
         args = parts[1:] if len(parts) > 1 else []
-        
+
         try:
-            # 清空命令
-            if action in ['clear', '清空', '清屏']:
-                return self._handle_clear_command(game_state)
-            
-            # 帮助命令
-            elif action in ['help', 'h', '帮助', '命令']:
-                return self._get_help_message()
-            
-            # 查看命令
-            elif action in ['look', 'l', '看', '查看', '观察']:
-                return self._handle_look_command()
-            
-            # 位置命令
-            elif action in ['where', '位置', '我在哪']:
-                return self._handle_where_command()
-            
-            # 角色命令
-            elif action in ['characters', 'chars', '角色', '人物', 'npc']:
-                return self._handle_characters_command()
-            
-            # 移动命令
-            elif action in ['go', 'move', '走', '去', '移动']:
-                return self._handle_move_command(args, game_state)
-            
-            # 直接方向命令
-            elif action in ['north', 'n', 'south', 's', 'east', 'e', 'west', 'w',
-                           '北', '南', '东', '西', '上', '下', '左', '右']:
-                return self._handle_direction_command(action, game_state)
-            
-            # 对话命令
-            elif action in ['talk', 'say', '说', '聊', '对话', '交谈']:
-                return self._handle_talk_command(args, game_state)
-            
-            # 状态命令
-            elif action in ['status', 'stat', '状态']:
-                return self._handle_status_command(game_state)
-            
-            else:
-                return f"未知命令: {action}\n输入 'help' 查看可用命令。"
-                
+            match action:
+                case 'clear' | '清空' | '清屏':
+                    return self._handle_clear_command(game_state)
+                case 'help' | 'h' | '帮助' | '命令':
+                    return self._get_help_message()
+                case 'look' | 'l' | '看' | '查看' | '观察':
+                    return self._handle_look_command()
+                case 'where' | '位置' | '我在哪':
+                    return self._handle_where_command()
+                case 'characters' | 'chars' | '角色' | '人物' | 'npc':
+                    return self._handle_characters_command()
+                case 'go' | 'move' | '走' | '去' | '移动':
+                    return self._handle_move_command(args, game_state)
+                case ('north' | 'n' | 'south' | 's' | 'east' | 'e' | 'west' | 'w'
+                      | '北' | '南' | '东' | '西' | '上' | '下' | '左' | '右'):
+                    return self._handle_direction_command(action, game_state)
+                case 'talk' | 'say' | '说' | '聊' | '对话' | '交谈':
+                    return self._handle_talk_command(args, game_state)
+                case 'status' | 'stat' | '状态':
+                    return self._handle_status_command(game_state)
+                case _:
+                    return f"未知命令: {action}\n输入 'help' 查看可用命令。"
         except Exception as e:
             if self.config_service.is_debug_mode():
                 return f"处理命令时出错: {str(e)}"
@@ -150,6 +131,7 @@ System Commands:
   status / 状态         - Show game status
   help / 帮助           - Show this help information
   clear / 清空          - Clear screen
+  fight <character> / 战斗 <角色> - Fight with a character
 
 Examples:
   看                   - Look around
