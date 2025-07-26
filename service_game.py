@@ -8,6 +8,26 @@ from service_inventory import InventoryService
 
 
 class GameService:
+    def _get_item_display_name(self, item_id: str) -> str:
+        """根据物品ID返回物品的中文显示名"""
+        item_names = {
+            "apple": "苹果",
+            "healing_potion": "治疗药水",
+            "damage_potion": "伤害药水"
+        }
+        return item_names.get(item_id, item_id)
+    
+    def _get_character_available_items(self, character_id: str) -> list:
+        """获取角色可赠送的物品列表（可根据角色自定义扩展）"""
+        # 示例实现：根据角色ID返回可赠送物品
+        match character_id:
+            case "elder":
+                # 长老可以给苹果
+                return ["apple"]
+            case "witch":
+                return ["healing_potion", "damage_potion"]
+            case _:
+                return []
     """游戏主服务类"""
     
     def __init__(self):
