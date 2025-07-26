@@ -13,7 +13,7 @@
     "shopkeeper": {
       "character_id": "shopkeeper", 
       "name": "商店老板",
-      "personality": "精明但诚实的商人，对各种商品和价格了如指掌。他喜欢与顾客聊天，总是能提供有用的信息。说话直接但友善。",
+      "personality": "精明但诚实的商人，对各种商品和价格了如指掌。他喜欢与顾客聊天，总是能提供有用的信息。说话直接但友善。他卖一些硬面包、小蓝药、止血草这样的物品。",
       "location": "village_shop",
       "mood": 0.6,
       "can_fight": true,

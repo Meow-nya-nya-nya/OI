@@ -75,7 +75,35 @@ class InventoryService:
                 name="伤害药水",
                 description="危险的毒药，使用需谨慎",
                 item_type="consumable",
-                effects={"damage": 30}  # 对敌人30伤害，对自己50伤害
+                effects={"damage": 30}
+            ),
+            "damage_potion": Item(
+                item_id="herb",
+                name="止血草",
+                description="少量恢复血量，增加一些攻击力",
+                item_type="consumable",
+                effects={"hp": 10, "attack": 5}  # 对敌人30伤害，对自己50伤害
+            ),
+            "damage_potion": Item(
+                item_id="damage_potion",
+                name="伤害药水",
+                description="危险的毒药，使用需谨慎",
+                item_type="consumable",
+                effects={"damage": 30}
+            ),
+            "damage_potion": Item(
+                item_id="mana_potion",
+                name="小蓝药",
+                description="恢复少量血量",
+                item_type="consumable",
+                effects={"hp": 25}
+            ),
+            "damage_potion": Item(
+                item_id="bread",
+                name="硬面包",
+                description="很干的面包",
+                item_type="consumable",
+                effects={"hp": 10}
             )
         }
         return items_data

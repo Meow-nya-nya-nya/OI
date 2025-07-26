@@ -13,7 +13,10 @@ class GameService:
         item_names = {
             "apple": "苹果",
             "healing_potion": "治疗药水",
-            "damage_potion": "伤害药水"
+            "damage_potion": "伤害药水",
+            "herb": "止血草",
+            "bread": "硬面包",
+            "mana_potion": "小蓝药"
         }
         return item_names.get(item_id, item_id)
     
@@ -26,6 +29,8 @@ class GameService:
                 return ["apple"]
             case "witch":
                 return ["healing_potion", "damage_potion"]
+            case "shopkeeper":
+                return ["herb", "mana_potion"]
             case _:
                 return []
     """游戏主服务类"""
@@ -298,6 +303,13 @@ class GameService:
                 session_id=f"char_{character_id}",
                 available_items=available_items
             ))
+            # 修复：如果AI返回的是JSON字符串，需解析
+            import json
+            if isinstance(ai_response, str):
+                try:
+                    ai_response = json.loads(ai_response)
+                except Exception:
+                    ai_response = {"msg": ai_response}
             
             response_text = ai_response.get("msg", "...")
             new_mood = ai_response.get("mood", character.mood)
@@ -324,6 +336,28 @@ class GameService:
                 self.inventory_service.add_item(give_item, 1)
                 item_name = self._get_item_display_name(give_item)
                 item_result = f"\n🎁 {character.name}给了你{item_name}！"
+            # 自动识别文本中的物品赠送
+            elif not give_item:
+                import re
+                # 支持的物品名映射（可扩展）
+                item_name_map = {
+                    "止血草": "herb",
+                    "硬面包": "bread",
+                    "小蓝药": "mana_potion",
+                    "苹果": "apple",
+                    "治疗药水": "healing_potion",
+                    "伤害药水": "damage_potion"
+                }
+                # 匹配“物品名×数量”
+                matches = re.findall(r"([\u4e00-\u9fa5A-Za-z0-9_]+)[×x](\d+)", response_text)
+                added_items = []
+                for name, count in matches:
+                    item_id = item_name_map.get(name, None)
+                    if item_id:
+                        self.inventory_service.add_item(item_id, int(count))
+                        added_items.append(f"{name}×{count}")
+                if added_items:
+                    item_result += f"\n🎁 {character.name}给了你：{'、'.join(added_items)}！"
             
             return f"🗣️ 你对{character.name}说: \"{message}\"\n\n{mood_emoji} {character.name}: \"{response_text}\"{status_info}{item_result}"
             
