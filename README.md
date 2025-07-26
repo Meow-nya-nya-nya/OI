@@ -43,14 +43,9 @@ pip install -r requirements.txt
 ```
 
 ### 2. 启动服务
-- Windows:
-  ```bat
-  start.bat
-  ```
-- Linux/Mac:
-  ```bash
-  bash start.sh
-  ```
+```bash
+python webcli_app.py
+```
 
 ### 3. 访问游戏
 浏览器访问: [http://localhost:8080](http://localhost:8080)
