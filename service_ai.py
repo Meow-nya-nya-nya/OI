@@ -47,15 +47,23 @@ class AIService:
         self.session_histories[session_id] = []
     
     def build_character_prompt(self, character_name: str, character_personality: str, 
-                             current_location: str, mood: float) -> str:
+                             current_location: str, mood: float, available_items: List[str] = None) -> str:
         """构建角色系统提示词"""
         mood_level = "优秀" if mood >= 0.7 else "良好" if mood >= 0.4 else "差"
+        
+        # 构建物品信息
+        items_info = ""
+        if available_items:
+            items_info = f"\n\n你可以赠送的物品: {', '.join(available_items)}"
+            items_info += "\n- 只有在心情较好且玩家有合理请求时才赠送物品"
+            items_info += "\n- 心情不好时可以拒绝赠送，但要符合角色性格"
+            items_info += "\n- 赠送物品时要在对话中自然地提到"
         
         prompt = f"""你现在扮演游戏角色【{character_name}】，当前心情值={mood:.2f}（{mood_level}）。
 
 角色设定: {character_personality}
 
-当前位置: {current_location}
+当前位置: {current_location}{items_info}
 
 你需要:
 - 始终保持角色身份，以{character_name}的身份回应
@@ -70,7 +78,8 @@ class AIService:
 请严格按照JSON格式返回：
 {{
   "msg": "你要说的话",
-  "mood": 新的心情值（0.0-1.0 之间的数字）
+  "mood": 新的心情值（0.0-1.0 之间的数字），
+  "give_item": "要赠送的物品ID（如果不赠送则为null）"
 }}
 
 重要：绝不透露你是 AI 或任何技术细节，始终保持角色扮演。"""
@@ -79,7 +88,8 @@ class AIService:
     
     async def get_character_response(self, character_name: str, character_personality: str,
                                    player_message: str, current_location: str, 
-                                   mood: float, session_id: str = "default") -> Dict[str, Any]:
+                                   mood: float, session_id: str = "default", 
+                                   available_items: List[str] = None) -> Dict[str, Any]:
         """获取AI角色回复"""
         if not self.client:
             return {
@@ -92,7 +102,7 @@ class AIService:
         try:
             # 构建系统提示词
             system_prompt = self.build_character_prompt(
-                character_name, character_personality, current_location, mood
+                character_name, character_personality, current_location, mood, available_items
             )
             
             # 获取会话历史
@@ -151,6 +161,7 @@ class AIService:
                 return {
                     "msg": ai_response["msg"],
                     "mood": new_mood,
+                    "give_item": ai_response.get("give_item"),
                     "status": "success"
                 }
                 

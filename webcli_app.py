@@ -161,13 +161,13 @@ class WebCLIApp:
                 
                 <form action="/" method="post" class="input-area">
                     <input type="text" name="command" class="command-input" 
-                           placeholder="输入指令... (例如: 看, 帮助, 北, 说 长老 你好)" 
+                           placeholder="输入指令... (例如: 看, 帮助, 北, 说 长老 你好, 战 村民)" 
                            id="commandInput" autocomplete="off">
                     <button type="submit" class="submit-btn">执行</button>
                 </form>
                 
                 <div class="help-text">
-                    💡 输入 '帮助' 查看指令 | 输入 '清空' 清理屏幕 | 单字符指令: 看/人/北/南/东/西
+                    💡 输入 '帮助' 查看指令 | 输入 '清空' 清理屏幕 | 单字符指令: 看/人/北/南/东/西/战
                 </div>
             </div>
             
