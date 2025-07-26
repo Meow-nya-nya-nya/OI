@@ -1,0 +1,48 @@
+{
+  "characters": {
+    "elder": {
+      "character_id": "elder",
+      "name": "村庄长老",
+      "personality": "智慧而和蔼的老人，对村庄的历史了如指掌。他总是乐于为年轻的冒险者提供建议和指导。说话温和但富有哲理。",
+      "location": "village_center",
+      "mood": 0.7
+    },
+    "shopkeeper": {
+      "character_id": "shopkeeper", 
+      "name": "商店老板",
+      "personality": "精明但诚实的商人，对各种商品和价格了如指掌。他喜欢与顾客聊天，总是能提供有用的信息。说话直接但友善。",
+      "location": "village_shop",
+      "mood": 0.6
+    },
+    "traveler": {
+      "character_id": "traveler",
+      "name": "神秘旅者", 
+      "personality": "来自远方的神秘旅者，见多识广，知道许多外界的秘密。他的话语中总是带着一丝神秘感，让人捉摸不透。",
+      "location": "forest_entrance",
+      "mood": 0.5
+    },
+    "villager": {
+      "character_id": "villager",
+      "name": "村民",
+      "personality": "朴实的村民，对村庄生活非常熟悉。他们勤劳善良，但对外来者有些谨慎。说话朴实无华。",
+      "location": "village_house", 
+      "mood": 0.5
+    },
+    "fisherman": {
+      "character_id": "fisherman",
+      "name": "河边渔夫",
+      "personality": "安静的渔夫，喜欢独自在河边钓鱼。他对河流和周围的自然环境非常了解，说话简洁但富有智慧。",
+      "location": "river_bank",
+      "mood": 0.6
+    }
+  },
+  "mood_descriptions": {
+    "0.8": "非常友好",
+    "0.6": "友好", 
+    "0.4": "普通",
+    "0.2": "冷淡",
+    "0.0": "敌对"
+  },
+  "conversation_history_limit": 10,
+  "context_conversation_limit": 3
+}

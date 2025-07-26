@@ -3,6 +3,8 @@
 管理游戏中的 NPC 角色
 """
 from typing import Dict, Any, List, Optional
+import json
+import os
 from service_config import ConfigService
 
 class Mob:
@@ -57,7 +59,7 @@ class Character:
         self.mood = mood or ConfigService().get_default_mood()
         self.conversation_history = []
     
-    def add_conversation(self, user_message: str, ai_response: str):
+    def add_conversation(self, user_message: str, ai_response: str, history_limit: int = 10):
         """添加对话记录"""
         self.conversation_history.append({
             'user': user_message,
@@ -65,38 +67,47 @@ class Character:
         })
         
         # 限制历史记录长度，避免内存过度使用
-        if len(self.conversation_history) > 10:
-            self.conversation_history = self.conversation_history[-10:]
+        if len(self.conversation_history) > history_limit:
+            self.conversation_history = self.conversation_history[-history_limit:]
     
-    def get_conversation_context(self) -> str:
+    def get_conversation_context(self, context_limit: int = 3) -> str:
         """获取对话上下文"""
         if not self.conversation_history:
             return ""
         
         context_lines = []
-        for conv in self.conversation_history[-3:]:  # 只取最近 3 轮对话
+        for conv in self.conversation_history[-context_limit:]:  # 只取最近几轮对话
             context_lines.append(f"玩家: {conv['user']}")
             context_lines.append(f"{self.name}: {conv['ai']}")
         
         return "\n".join(context_lines)
     
-    def get_description(self) -> str:
+    def get_description(self, mood_descriptions: Dict[str, str] = None) -> str:
         """获取角色描述"""
-        mood_desc = self._get_mood_description()
+        mood_desc = self._get_mood_description(mood_descriptions)
         return f"{self.name} ({mood_desc})"
     
-    def _get_mood_description(self) -> str:
+    def _get_mood_description(self, mood_descriptions: Dict[str, str] = None) -> str:
         """获取心情描述"""
-        if self.mood >= 0.8:
-            return "非常友好"
-        elif self.mood >= 0.6:
-            return "友好"
-        elif self.mood >= 0.4:
-            return "普通"
-        elif self.mood >= 0.2:
-            return "冷淡"
+        if mood_descriptions:
+            # 使用外部提供的心情描述映射
+            mood_thresholds = [0.8, 0.6, 0.4, 0.2, 0.0]
+            for threshold in mood_thresholds:
+                if self.mood >= threshold:
+                    return mood_descriptions.get(str(threshold), "普通")
+            return mood_descriptions.get("0.0", "敌对")
         else:
-            return "敌对"
+            # 使用默认的心情描述
+            if self.mood >= 0.8:
+                return "非常友好"
+            elif self.mood >= 0.6:
+                return "友好"
+            elif self.mood >= 0.4:
+                return "普通"
+            elif self.mood >= 0.2:
+                return "冷淡"
+            else:
+                return "敌对"
     
     def update_mood(self, new_mood: float):
         """更新心情值"""
@@ -108,53 +119,57 @@ class CharacterService:
     
     def __init__(self):
         self.characters = {}
+        self.mood_descriptions = {}
+        self.conversation_history_limit = 10
+        self.context_conversation_limit = 3
         self._initialize_characters()
     
     def _initialize_characters(self):
-        """初始化游戏角色"""
-        # 村庄长老
+        """从JSON文件初始化游戏角色"""
+        role_file = os.path.join("worlds", "role.json")
+        
+        try:
+            with open(role_file, 'r', encoding='utf-8') as f:
+                role_data = json.load(f)
+            
+            # 加载配置参数
+            self.mood_descriptions = role_data.get("mood_descriptions", {})
+            self.conversation_history_limit = role_data.get("conversation_history_limit", 10)
+            self.context_conversation_limit = role_data.get("context_conversation_limit", 3)
+            
+            # 加载角色数据
+            characters_data = role_data.get("characters", {})
+            for character_id, character_info in characters_data.items():
+                self.characters[character_id] = Character(
+                    character_id=character_info["character_id"],
+                    name=character_info["name"],
+                    personality=character_info["personality"],
+                    location=character_info["location"],
+                    mood=character_info.get("mood", 0.5)
+                )
+                
+        except FileNotFoundError:
+            print(f"警告: 角色文件 {role_file} 未找到，使用默认角色")
+            self._create_default_characters()
+        except json.JSONDecodeError as e:
+            print(f"警告: 角色文件格式错误: {e}，使用默认角色")
+            self._create_default_characters()
+    
+    def _create_default_characters(self):
+        """创建默认角色（备用方案）"""
+        self.mood_descriptions = {
+            "0.8": "非常友好", "0.6": "友好", "0.4": "普通",
+            "0.2": "冷淡", "0.0": "敌对"
+        }
+        self.conversation_history_limit = 10
+        self.context_conversation_limit = 3
+        
         self.characters["elder"] = Character(
             character_id="elder",
             name="村庄长老",
-            personality="智慧而和蔼的老人，对村庄的历史了如指掌。他总是乐于为年轻的冒险者提供建议和指导。说话温和但富有哲理。",
+            personality="智慧而和蔼的老人。",
             location="village_center",
             mood=0.7
-        )
-        
-        # 商店老板
-        self.characters["shopkeeper"] = Character(
-            character_id="shopkeeper",
-            name="商店老板",
-            personality="精明但诚实的商人，对各种商品和价格了如指掌。他喜欢与顾客聊天，总是能提供有用的信息。说话直接但友善。",
-            location="village_shop",
-            mood=0.6
-        )
-        
-        # 神秘旅者
-        self.characters["traveler"] = Character(
-            character_id="traveler",
-            name="神秘旅者",
-            personality="来自远方的神秘旅者，见多识广，知道许多外界的秘密。他的话语中总是带着一丝神秘感，让人捉摸不透。",
-            location="forest_entrance",
-            mood=0.5
-        )
-        
-        # 村民
-        self.characters["villager"] = Character(
-            character_id="villager",
-            name="村民",
-            personality="朴实的村民，对村庄生活非常熟悉。他们勤劳善良，但对外来者有些谨慎。说话朴实无华。",
-            location="village_house",
-            mood=0.5
-        )
-        
-        # 河边渔夫
-        self.characters["fisherman"] = Character(
-            character_id="fisherman",
-            name="河边渔夫",
-            personality="安静的渔夫，喜欢独自在河边钓鱼。他对河流和周围的自然环境非常了解，说话简洁但富有智慧。",
-            location="river_bank",
-            mood=0.6
         )
     
     def get_character(self, character_id: str) -> Optional[Character]:
@@ -204,4 +219,34 @@ class CharacterService:
         for character in self.characters.values():
             character.mood = default_mood
             character.conversation_history = []
+    
+    def add_character_conversation(self, character_id: str, user_message: str, ai_response: str):
+        """为指定角色添加对话记录"""
+        if character_id in self.characters:
+            self.characters[character_id].add_conversation(
+                user_message, ai_response, self.conversation_history_limit
+            )
+    
+    def get_character_context(self, character_id: str) -> str:
+        """获取指定角色的对话上下文"""
+        if character_id in self.characters:
+            return self.characters[character_id].get_conversation_context(
+                self.context_conversation_limit
+            )
+        return ""
+    
+    def get_mood_description(self, mood: float) -> str:
+        """根据心情值获取描述"""
+        # 找到最接近的心情描述
+        mood_thresholds = [0.8, 0.6, 0.4, 0.2, 0.0]
+        for threshold in mood_thresholds:
+            if mood >= threshold:
+                return self.mood_descriptions.get(str(threshold), "普通")
+        return self.mood_descriptions.get("0.0", "敌对")
+    
+    def get_character_description(self, character_id: str) -> str:
+        """获取角色描述（包含正确的心情描述）"""
+        if character_id in self.characters:
+            return self.characters[character_id].get_description(self.mood_descriptions)
+        return "未知角色"
 
