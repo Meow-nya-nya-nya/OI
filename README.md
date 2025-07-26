@@ -14,6 +14,9 @@
 - Web CLI 交互界面，支持命令输入
 - Kimi K2 驱动角色智能回复
 
+## 在线体验
+[0l.ink](https://0l.ink/)
+
 <p align="center">
   <img src="assets/demo.jpg" alt="Oi Demo" style="max-width: 100%; border: 1px solid #ccc;" />
 </p>
@@ -37,17 +40,25 @@
 ```
 
 ## 快速开始
-### 1. 安装依赖
+
+### 1.创建虚拟环境
+以Linux为例
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### 2. 安装依赖
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. 启动服务
+### 3. 启动服务
 ```bash
 python webcli_app.py
 ```
 
-### 3. 访问游戏
+### 4. 访问游戏
 浏览器访问: [http://localhost:8080](http://localhost:8080)
 
 ## 常用命令
