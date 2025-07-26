@@ -62,7 +62,8 @@ class WebCLIApp:
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>OI</title>
+            <title>Oi</title>
+            <link rel="icon" type="image/x-icon" href="/assets/icon.ico">
             <style>
                 body {{
                     font-family: 'Courier New', monospace;
@@ -151,7 +152,7 @@ class WebCLIApp:
         <body>
             <div class="container">
                 <div class="header">
-                    <div class="game-title">OI</div>
+                    <div class="game-title">Oi</div>
                     <div class="game-subtitle">AI驱动的文字冒险游戏</div>
                 </div>
                 
@@ -203,7 +204,7 @@ class WebCLIApp:
         game_state = self._get_game_state()
         
         if not command.strip():
-            return {'error': '命令不能为空'}
+            return {'error': 'Command cannot be empty'}
         
         try:
             response = self.game_service.process_command(command.strip(), game_state)
@@ -217,8 +218,8 @@ class WebCLIApp:
                 }
             }
         except Exception as e:
-            return {'error': f'处理命令时出错: {str(e)}'}
-    
+            return {'error': f'Error processing command: {str(e)}'}
+
     @cherrypy.expose
     def clear(self):
         """清空游戏历史"""
@@ -242,6 +243,10 @@ def main():
         '/': {
             'tools.sessions.on': True,
             'tools.sessions.timeout': config_service.get('session_timeout', 3600),
+        },
+        '/assets': {
+            'tools.staticdir.on': True,
+            'tools.staticdir.dir': os.path.join(os.path.dirname(os.path.abspath(__file__)), 'assets'),
         }
     }
     
