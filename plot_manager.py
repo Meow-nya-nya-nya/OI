@@ -1,7 +1,3 @@
-"""
-剧情管理器模块
-管理游戏剧情文件的加载和缓存
-"""
 import json
 import os
 from typing import Dict, Any, Optional, List

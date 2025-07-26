@@ -1,11 +1,7 @@
-"""
-角色管理服务模块
-管理游戏中的 NPC 角色
-"""
 from typing import Dict, Any, List, Optional
 import json
 import os
-from service_config import ConfigService
+from config import ConfigService
 
 class Mob:
     def __init__(self, name: str, health: int, attack_base: int, physical: int, magical: int, attack_speed: int, defense: int):

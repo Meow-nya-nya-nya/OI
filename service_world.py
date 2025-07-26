@@ -1,7 +1,3 @@
-"""
-世界管理服务模块
-管理游戏世界、位置和移动逻辑
-"""
 from typing import Dict, Any, List, Tuple, Optional
 import json
 import os
@@ -108,7 +104,7 @@ class WorldService:
         if not location:
             return "你似乎迷失在了未知的地方..."
         
-        description = f"📍 {location.name}\n\n{location.description}\n\n{location.get_exits_description(self.direction_names)}"
+        description = f"📍 {location.name}\n\n{location.description}\n\n{location.get_exits_description()}"
         
         # 添加角色信息
         if location.characters:

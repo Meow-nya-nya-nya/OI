@@ -1,10 +1,6 @@
-"""
-游戏主服务模块
-整合各个服务模块，处理游戏逻辑
-"""
 import asyncio
 from typing import Dict, Any, List, Tuple
-from service_config import ConfigService
+from config import ConfigService
 from service_world import WorldService
 from service_character import CharacterService
 from service_ai import AIService
@@ -59,13 +55,16 @@ class GameService:
     
     def _get_welcome_message(self) -> str:
         """获取欢迎信息"""
-        return f"""Welcome to {self.config_service.get_game_title()}!
+        return f"""🎮 欢迎来到 {self.config_service.get_game_title()}!
 
-You are a young adventurer who has just arrived in a mysterious realm.
-Explore this world and chat with AI-driven characters!
+🧙‍♂️ 你是一位刚到达神秘世界的年轻冒险者
+🌟 在这里探索世界，与AI角色对话吧！
 
-Tip: Type 'help' to see available commands
-Tip: Type 'clear' to clear the screen
+💡 新手提示:
+  • 输入 '帮助' 查看指令
+  • 输入 '看' 观察周围
+  • 输入 '人' 查看角色
+  • 输入 '清空' 清理屏幕
 
 ---"""
     
@@ -82,27 +81,46 @@ Tip: Type 'clear' to clear the screen
 
         try:
             match action:
-                case 'clear' | '清空' | '清屏':
+                # 系统指令 - 简化版本
+                case '清空' | '清' | 'clear':
                     return self._handle_clear_command(game_state)
-                case 'help' | 'h' | '帮助' | '命令':
+                case '帮助' | '帮' | 'h' | 'help':
                     return self._get_help_message()
-                case 'look' | 'l' | '看' | '查看' | '观察':
-                    return self._handle_look_command()
-                case 'where' | '位置' | '我在哪':
-                    return self._handle_where_command()
-                case 'characters' | 'chars' | '角色' | '人物' | 'npc':
-                    return self._handle_characters_command()
-                case 'go' | 'move' | '走' | '去' | '移动':
-                    return self._handle_move_command(args, game_state)
-                case ('north' | 'n' | 'south' | 's' | 'east' | 'e' | 'west' | 'w'
-                      | '北' | '南' | '东' | '西' | '上' | '下' | '左' | '右'):
-                    return self._handle_direction_command(action, game_state)
-                case 'talk' | 'say' | '说' | '聊' | '对话' | '交谈':
-                    return self._handle_talk_command(args, game_state)
-                case 'status' | 'stat' | '状态':
+                case '状态' | 'status':
                     return self._handle_status_command(game_state)
+                
+                # 探索指令 - 简化版本  
+                case '看' | 'l' | 'look':
+                    return self._handle_look_command()
+                case '人' | 'c' | 'chars' | '角色':
+                    return self._handle_characters_command()
+                
+                # 移动指令 - 简化版本
+                case '北' | 'n' | 'north':
+                    return self._handle_direction_command('north', game_state)
+                case '南' | 's' | 'south':
+                    return self._handle_direction_command('south', game_state)
+                case '东' | 'e' | 'east':
+                    return self._handle_direction_command('east', game_state)
+                case '西' | 'w' | 'west':
+                    return self._handle_direction_command('west', game_state)
+                case '上' | 'u' | 'up':
+                    return self._handle_direction_command('up', game_state)
+                case '下' | 'd' | 'down':
+                    return self._handle_direction_command('down', game_state)
+                
+                # 对话指令 - 简化版本
+                case '说' | 'talk' | 'say':
+                    return self._handle_talk_command(args, game_state)
+                
+                # 兼容旧指令
+                case 'go' | 'move' | '走' | '去':
+                    return self._handle_move_command(args, game_state)
+                case 'where' | '位置':
+                    return self._handle_where_command()
+                
                 case _:
-                    return f"未知命令: {action}\n输入 'help' 查看可用命令。"
+                    return f"❓ 不认识的指令: {action}\n💡 输入 '帮助' 查看可用指令"
         except Exception as e:
             if self.config_service.is_debug_mode():
                 return f"处理命令时出错: {str(e)}"
@@ -116,27 +134,28 @@ Tip: Type 'clear' to clear the screen
     
     def _get_help_message(self) -> str:
         """获取帮助信息"""
-        return """Available Commands:
+        return """🎮 简化指令帮助
 
-Exploration Commands:
-  look / 看             - View current location
-  where / 位置          - Show current location name
-  go <direction> / 走 <方向>   - Move (north/south/east/west or 北/南/东/西)
+基础指令:
+  看 / l               - 查看当前位置
+  北/南/东/西          - 移动方向 (或 n/s/e/w)
+  人 / c               - 查看当前位置的角色
   
-Character Commands:
-  characters / 角色     - List characters in current location
-  talk <character> <message> / 说 <角色> <消息> - Chat with AI characters
+对话指令:
+  说 <角色> <话>       - 与角色对话
   
-System Commands:
-  status / 状态         - Show game status
-  help / 帮助           - Show this help information
-  clear / 清空          - Clear screen
-  fight <character> / 战斗 <角色> - Fight with a character
+系统指令:
+  帮助 / h             - 显示此帮助
+  清空                 - 清空屏幕
+  状态                 - 显示游戏状态
 
-Examples:
-  看                   - Look around
-  北 or go north       - Move north
-  说 elder 你好        - Greet the elder"""
+💡 使用示例:
+  看                   - 观察周围
+  北                   - 向北移动  
+  人                   - 看看有谁
+  说 长老 你好         - 和长老打招呼
+
+提示: 大部分指令都有简化版本，试试单个字符！"""
     
     def _handle_look_command(self) -> str:
         """处理查看命令"""
@@ -153,25 +172,26 @@ Examples:
         characters = self.character_service.get_characters_in_location(current_location)
         
         if not characters:
-            return "There are no other people here."
+            return "🚫 这里没有其他人"
         
         char_list = []
         for char_id, character in characters.items():
-            char_list.append(f"  • {character.name} (ID: {char_id}) - {character.get_description()}")
+            mood_emoji = self._get_mood_emoji(character.mood)
+            char_list.append(f"  {mood_emoji} {character.name} ({char_id})")
         
-        return "Characters here:\n" + "\n".join(char_list) + "\n\nTip: Use 'talk <character_id> <message>' to chat with them"
+        return "👥 这里的人:\n" + "\n".join(char_list) + "\n\n💬 使用 '说 <角色> <话>' 与他们对话"
     
     def _handle_move_command(self, args: List[str], game_state: Dict[str, Any]) -> str:
         """处理移动命令"""
         if not args:
             directions = self.world_service.get_available_directions()
             direction_names = {
-                "north": "北方", "south": "南方",
-                "east": "东方", "west": "西方",
-                "up": "上方", "down": "下方"
+                "north": "北", "south": "南",
+                "east": "东", "west": "西",
+                "up": "上", "down": "下"
             }
             available = [direction_names.get(d, d) for d in directions]
-            return f"去哪里？可用方向: {', '.join(available)}"
+            return f"🧭 要去哪里？可选: {' | '.join(available)}"
         
         direction = args[0]
         success, message = self.world_service.move_to(direction)
@@ -181,9 +201,9 @@ Examples:
             game_state['current_location'] = self.world_service.current_location
             # 返回移动信息和新位置描述
             location_desc = self.world_service.get_location_description()
-            return f"{message}\n\n{location_desc}"
+            return f"🚶 {message}\n\n{location_desc}"
         else:
-            return message
+            return f"❌ {message}"
     
     def _handle_direction_command(self, direction: str, game_state: Dict[str, Any]) -> str:
         """处理直接方向命令"""
@@ -192,7 +212,7 @@ Examples:
     def _handle_talk_command(self, args: List[str], game_state: Dict[str, Any]) -> str:
         """处理对话命令"""
         if len(args) < 1:
-            return "和谁说话？使用: talk <角色ID> <消息>\n或者: 说 <角色ID> <消息>"
+            return "💬 和谁说话？\n格式: 说 <角色> <话>\n例如: 说 长老 你好"
         
         character_id = args[0]
         message = " ".join(args[1:]) if len(args) > 1 else "你好"
@@ -200,12 +220,12 @@ Examples:
         # 检查角色是否存在
         character = self.character_service.get_character(character_id)
         if not character:
-            return f"没有找到角色 '{character_id}'。\n输入 'characters' 查看当前位置的角色。"
+            return f"❓ 没找到 '{character_id}'\n💡 输入 '人' 查看这里有谁"
         
         # 检查角色是否在当前位置
         current_location = self.world_service.current_location
         if character.location != current_location:
-            return f"{character.name} 不在这里。"
+            return f"🚫 {character.name} 不在这里"
         
         # 调用AI服务获取回复
         try:
@@ -228,22 +248,38 @@ Examples:
             # 记录对话
             character.add_conversation(message, response_text)
             
+            # 获取心情表情
+            mood_emoji = self._get_mood_emoji(new_mood)
+            
             # 添加状态信息（调试模式下）
             status_info = ""
             if self.config_service.is_debug_mode():
                 status = ai_response.get("status", "unknown")
                 status_info = f"\n[调试: {status}, 心情: {character.mood:.2f}]"
             
-            return f"You said to {character.name}: \"{message}\"\n\n{character.name}: \"{response_text}\"{status_info}"
+            return f"🗣️ 你对{character.name}说: \"{message}\"\n\n{mood_emoji} {character.name}: \"{response_text}\"{status_info}"
             
         except Exception as e:
             if self.config_service.is_debug_mode():
-                return f"AI服务错误: {str(e)}\n使用备用回复..."
+                return f"⚠️ AI服务错误: {str(e)}\n使用备用回复..."
             
             # 使用备用回复
             response = self._get_mock_ai_response(character, message)
             character.add_conversation(message, response)
-            return f"You said to {character.name}: \"{message}\"\n\n{character.name}: \"{response}\""
+            return f"🗣️ 你对{character.name}说: \"{message}\"\n\n😊 {character.name}: \"{response}\""
+    
+    def _get_mood_emoji(self, mood: float) -> str:
+        """根据心情值获取表情符号"""
+        if mood >= 0.8:
+            return "😊"  # 非常友好
+        elif mood >= 0.6:
+            return "🙂"  # 友好
+        elif mood >= 0.4:
+            return "😐"  # 普通
+        elif mood >= 0.2:
+            return "😒"  # 冷淡
+        else:
+            return "😠"  # 敌对
     
     def _get_mock_ai_response(self, character, message: str) -> str:
         """获取模拟AI回复（临时实现）"""
@@ -262,9 +298,9 @@ Examples:
         location = self.world_service.get_current_location()
         char_count = len(self.world_service.get_characters_in_current_location())
         
-        return f"""Game Status:
-Current Location: {location.name}
-Characters in Location: {char_count}
-Game Version: {self.config_service.get('game_version')}
-History Count: {len(game_state.get('history', []))}"""
+        return f"""📊 游戏状态:
+📍 当前位置: {location.name}
+👥 这里的人: {char_count}人
+🎮 游戏版本: {self.config_service.get('game_version')}
+📝 历史记录: {len(game_state.get('history', []))}条"""
 

@@ -1,12 +1,8 @@
-"""
-AI 服务模块
-基于原有 service.py 的 AI 交互逻辑，适配新的架构
-"""
 import json
 import asyncio
 from typing import Dict, Any, List, Optional
 from openai import OpenAI, OpenAIError
-from service_config import ConfigService
+from config import ConfigService
 
 
 class AIService:

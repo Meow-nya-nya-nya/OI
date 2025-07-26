@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import cherrypy
 import json
 import os
@@ -9,7 +8,7 @@ from typing import Dict, Any
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from service_game import GameService
-from service_config import ConfigService
+from config import ConfigService
 
 
 class WebCLIApp:
@@ -162,13 +161,13 @@ class WebCLIApp:
                 
                 <form action="/" method="post" class="input-area">
                     <input type="text" name="command" class="command-input" 
-                           placeholder="输入命令... (例如: look, help, go north)" 
+                           placeholder="输入指令... (例如: 看, 帮助, 北, 说 长老 你好)" 
                            id="commandInput" autocomplete="off">
                     <button type="submit" class="submit-btn">执行</button>
                 </form>
                 
                 <div class="help-text">
-                    提示: 输入 'help' 查看可用命令 | 输入 'clear' 清空屏幕
+                    💡 输入 '帮助' 查看指令 | 输入 '清空' 清理屏幕 | 单字符指令: 看/人/北/南/东/西
                 </div>
             </div>
             
@@ -247,7 +246,7 @@ def main():
     }
     
     print("=" * 60)
-    print(f"Chat Game WebCLI Starting - {config_service.get_game_title()}")
+    print("Chat Game WebCLI Starting - AI Chat Game - WebCLI")
     print("=" * 60)
     print(f"Web Address: http://localhost:{config_service.get('server_port', 8080)}")
     print(f"API Endpoint: http://localhost:{config_service.get('server_port', 8080)}/api_command")
