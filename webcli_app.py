@@ -1,8 +1,4 @@
 #!/usr/bin/env python3
-"""
-Chat Game WebCLI Application
-基于CherryPy的Web命令行界面
-"""
 import cherrypy
 import json
 import os
@@ -67,7 +63,7 @@ class WebCLIApp:
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>{self.config_service.get_game_title()}</title>
+            <title>OI</title>
             <style>
                 body {{
                     font-family: 'Courier New', monospace;
@@ -156,8 +152,8 @@ class WebCLIApp:
         <body>
             <div class="container">
                 <div class="header">
-                    <div class="game-title">{self.config_service.get_game_title()}</div>
-                    <div class="game-subtitle">AI驱动的文字冒险游戏 - Web版本</div>
+                    <div class="game-title">OI</div>
+                    <div class="game-subtitle">AI驱动的文字冒险游戏</div>
                 </div>
                 
                 <div class="terminal" id="terminal">
