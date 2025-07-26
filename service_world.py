@@ -129,14 +129,14 @@ class WorldService:
         normalized_direction = direction_map.get(direction, direction)
         
         if normalized_direction not in current_loc.exits:
-            return False, f"无法向{direction}移动，那里没有路。"
+            return False, f"⛔禁止通行，违者取消游戏资格。"
         
         target_location = current_loc.exits[normalized_direction]
         if target_location not in self.locations:
             return False, f"目标位置 {target_location} 不存在。"
         
         self.current_location = target_location
-        return True, f"你向{direction}移动了。"
+        return True, f"你走向{direction}方。"
     
     def get_available_directions(self) -> List[str]:
         """获取可用的移动方向"""
