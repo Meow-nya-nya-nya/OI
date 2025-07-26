@@ -45,6 +45,35 @@
       "exits": {
         "north": "village_center"
       }
+    },
+    "bridge": {
+      "name": "小桥",
+      "description": "这是河流上的小桥，桥上可以看到杨柳在河岸拍拍生长，柳絮飘飘风景十分美丽，阵阵微风令人愉快。",
+      "exits": {
+        "west": "river_bank"
+      }
+    },
+    "goblin_nest": {
+      "name": "哥布林巢穴",
+      "description": "隐藏在丛林深处的哥布林巢穴，阴暗潮湿，看着很令人害怕，你不禁地颤抖了下身子",
+      "exits": {
+        "south": "deep_forest"
+      }
+    },
+    "workshop": {
+      "name": "公社",
+      "description": "这里是村庄的公社，经常有人会在这里发表一些介绍和演讲，是值得一来的地方。",
+      "exits": {
+        "south": "village_house",
+        "north": "workshop_toilet"
+      }
+    },
+    "workshop_toilet": {
+      "name": "公社厕所",
+      "description": "公社旁平静的厕所，非常普通，散发出一股恶臭，令人不敢靠近，地上好像有什么东西？口区。",
+      "exits": {
+        "south": "workshop"
+      }
     }
   },
   "default_location": "village_center",
